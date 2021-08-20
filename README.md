@@ -1,4 +1,6 @@
-﻿# Protocol SIRAH FF in GROMACS
+<p align="center"><img width="400" alt="portfolio_view" src="./Hybrid.Representation.png"></p>
+
+# Protocol SIRAH FF in GROMACS
 ## **Hybrid solvation : plugging SIRAH solvent to your atomistic system**
 This tutorial is based on official SIRAH tutorial on hybrid solvation by Matias Machado. It shows how to apply the hybrid solvation approach of SIRAH Force Field (FF) to speed up the simulation of an atomistic solute. The example system contains a hPSP protein surrounded by a shell of fine-grained (FG) waters, which are embedded in coarse-grained (CG) molecules, called WT4, to represent bulk water. 
 
