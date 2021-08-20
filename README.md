@@ -17,56 +17,54 @@ Ionic strength is better represented by including **FG ions to the FG shell** in
 ## **0. Retrieve the starting files**
 Download the archive with all the necessary stuff and extract it : 
 
-You will get a folder containing the force field definition of SIRAH inside the sirah.ff folder (version 2.2\_20-07), the necessary MDP files to perform the simulation, the topology files, and the protein already in the GROMACS format. The protein was prepared using the command pdb2gmx over the protein structure of chain A, retrieved from rscb.org with the PDB code 6HYJ, without the ligand. Then, the ligand was added using ACPYPE server and the GAFF2 Force Field. 
+`curl -L "https://github.com/eddydu44/SIRAH-FF-Hybrid-Solvation/raw/main/Protocol.Hybrid.Solvation.FILES.tar.gz" | tar xz `
+
+You will get a folder containing the force field definition of SIRAH inside the sirah.ff folder (version 2.2_20-07), the necessary MDP files to perform the simulation, the topology files, and the protein already in the GROMACS format. The protein was prepared using the command pdb2gmx over the protein structure of chain A, retrieved from rscb.org with the PDB code 6HYJ, without the ligand. Then, the ligand was added using ACPYPE server and the GAFF2 Force Field. 
 
 SIRAH FF was called inside the topol.top file using these lines :
 
-#include "./sirah.ff/hybsol\_comb2.itp"
-
+```
+#include "./sirah.ff/hybsol_comb2.itp"
 #include "./sirah.ff/solv.itp"
-
 #include "amber99sb-ildn.ff/ions.itp" 
-
+```
 Be vigilant on the position of these lines because it can cause conflicts with the AMBER FF.
 ## **1. Box creation**
-gmx editconf -f 0.hPSP-pSER.gro -o 1.boxed.gro -c -d 2.0 -bt cubic 
+`gmx editconf -f 0.hPSP-pSER.gro -o 1.boxed.gro -c -d 2.0 -bt cubic`
 
 ## **2. Solvate the system with a 1 nm FG shell**
-gmx solvate -cp 1.boxed.gro -cs spc216.gro -o 2.water.gro -shell 1 -p topol.top
+`gmx solvate -cp 1.boxed.gro -cs spc216.gro -o 2.water.gro -shell 1 -p topol.top`
 
 The command returns one essential information on success, the density of solvent molecules in the box :
-
+```
 Output configuration contains 13384 atoms in 3522 residues
-
 Volume                 :     1021.42 (nm^3)
-
-**Density                :     139.669 (g/l)**
-
+Density                :     139.669 (g/l)
 Number of solvent molecules:   3299
-
+```
 
 ## **3. Add FG ions for a concentration of 0.15 mol/L**
 Prepare a full precision system topology :
 
-gmx grompp -f ions.mdp -c 2.water.gro -p topol.top -o 2.water.tpr
+`gmx grompp -f ions.mdp -c 2.water.gro -p topol.top -o 2.water.tpr`
 
 Now we need to correct the concentration of ions wanted as we are not in a full box of water. Using previous density, we **can apply a proportional coefficient** as we know that a full box of water would have a density of around 1000g/L (if you want to be more precise, you can run the command of point 2. without the shell option and get the density).
 
-Consequently, the wanted concentration would be of :  C=0.139\*0.15=0.02 mol/L
+Consequently, the wanted concentration would be of :  C=0.139*0.15=0.02 mol/L
 
 Run the following command to add ions into the FG shell, select the SOL molecules to be substituted with.
 
-gmx genion -s 2.water.tpr -o 3.ions.gro -p topol.top -pname NA -nname CL -neutral -conc 0.02
+`gmx genion -s 2.water.tpr -o 3.ions.gro -p topol.top -pname NA -nname CL -neutral -conc 0.02`
 
 ## **4. Add CG water**
 Same method as point 2., but this time we don’t use the shell option to fill the rest of the box with the WT4 CG representation of water.
 
-gmx solvate -cp 3.ions.gro -cs ./sirah.ff/wt4tip3p.gro -o 4.CG.gro -p topol.top
+`gmx solvate -cp 3.ions.gro -cs ./sirah.ff/wt4tip3p.gro -o 4.CG.gro -p topol.top`
 
 ## **5. Add CG ions**
 Prepare a full precision system topology, correct number of molecules in topol.top if needed :
 
-gmx grompp -f ./sirah.ff/tutorial/2/CPU/em\_HYBSOL.mdp -p topol.top -c 4.CG.gro -o 4.CG.tpr -maxwarn 2
+`gmx grompp -f ./sirah.ff/tutorial/2/CPU/em_HYBSOL.mdp -p topol.top -c 4.CG.gro -o 4.CG.tpr -maxwarn 2`
 
 We need to calculate how many CG ions must be added to reach a concentration of 0.15 mol/L. Retrieve the number of WT4 molecules by looking at the topology file “topol.top”, or by looking at command output at point 4.
 
@@ -74,70 +72,47 @@ The available ionic species in SIRAH force field are: Na+ (NaW), K+ (KW) and Cl-
 
 For 2273 WT4 molecules we need 67 pairs of CG ions. Add them similarly to point 3. :
 
-gmx genion -s 4.CG.tpr -o 5.CG.ions.gro -np 67 -pname NaW -nn 67 -nname ClW -p topol.top
+`gmx genion -s 4.CG.tpr -o 5.CG.ions.gro -np 67 -pname NaW -nn 67 -nname ClW -p topol.top`
 
+## **6. MD Simulation**
 Create an index and add the following groups for the MD simulations :
 
-Protein\_SEP\_CA, Water\_and\_ions, WT4\_NaW\_ClW
+Protein_SEP_CA, Water_and_ions, WT4_NaW_ClW
 
-gmx make\_ndx -o index.ndx -f 5.CG.ions.gro
+`gmx make_ndx -o index.ndx -f 5.CG.ions.gro`
 
 
 
 Then you are ready to run Energy Minimization, Equilibrations (NVT then NPT) and Production (200ns) using the following series of commands :
 
+```
 #Optimisation
-
 gmx grompp -f em.mdp -c 5.CG.ions.gro -o 6.EM.tpr
-
 gmx mdrun -deffnm 6.EM
 
+#Equilibration nvt_2
+gmx grompp -f nvt_2.mdp -c 6.EM.gro -p topol.top -o 7.nvt_2.tpr -n index.ndx
+gmx mdrun -deffnm 7.nvt_2
+
+#Equilibration nvt_3
+gmx grompp -f nvt_3.mdp -t 7.nvt_2.cpt -p topol.top -o 8.nvt_3.tpr -n index.ndx
+gmx mdrun -deffnm 8.nvt_3
 
 
-#Equilibration nvt\_2
+#Equilibration nvt_4
+gmx grompp -f nvt_4.mdp -t 8.nvt_3.cpt -p topol.top -o 9.nvt_4.tpr -n index.ndx
+gmx mdrun -deffnm 9.nvt_4
 
-gmx grompp -f nvt\_2.mdp -c 6.EM.gro -p topol.top -o 7.nvt\_2.tpr -n index.ndx
+#Equilibration npt_5
+gmx grompp -f npt_5.mdp -t 9.nvt_4.cpt -p topol.top -o 10.npt_5.tpr -n index.ndx
+gmx mdrun -deffnm 10.npt_5
 
-gmx mdrun -deffnm 7.nvt\_2
+#Production npt_6
+gmx grompp -f npt_6.mdp -t 10.npt_5.cpt -p topol.top -o 11.npt_6.tpr -n index.ndx
+gmx mdrun -deffnm 11.npt_6
 
-
-
-#Equilibration nvt\_3
-
-gmx grompp -f nvt\_3.mdp -t 7.nvt\_2.cpt -p topol.top -o 8.nvt\_3.tpr -n index.ndx
-
-gmx mdrun -deffnm 8.nvt\_3
-
-
-
-#Equilibration nvt\_4
-
-gmx grompp -f nvt\_4.mdp -t 8.nvt\_3.cpt -p topol.top -o 9.nvt\_4.tpr -n index.ndx
-
-gmx mdrun -deffnm 9.nvt\_4
-
-
-
-#Equilibration npt\_5
-
-gmx grompp -f npt\_5.mdp -t 9.nvt\_4.cpt -p topol.top -o 10.npt\_5.tpr -n index.ndx
-
-gmx mdrun -deffnm 10.npt\_5
-
-
-
-#Production npt\_6
-
-gmx grompp -f npt\_6.mdp -t 10.npt\_5.cpt -p topol.top -o 11.npt\_6.tpr -n index.ndx
-
-gmx mdrun -deffnm 11.npt\_6
-
-
-
-#Production npt\_9
-
-gmx grompp -f npt\_9.mdp -t 11.npt\_6.cpt -p topol.top  -o 12.npt\_9.tpr -n index.ndx
-
-gmx mdrun -deffnm 12.npt\_9
-
+#Production npt_9
+gmx grompp -f npt_9.mdp -t 11.npt_6.cpt -p topol.top  -o 12.npt_9.tpr -n index.ndx
+gmx mdrun -deffnm 12.npt_9
+```
 You can get a look at each MDP file to get the parameters used at each step.
