@@ -1,0 +1,13 @@
+; Notice terminal sA is treated as sG
+
+[ Charged ]
+[ replace ]
+GO GOz  50.0 -0.60
+GC GC   50.0 -0.40
+GN GN   50.0  0.00
+
+[ Neutral ]
+[ replace ]
+GO GOn  50.0 -0.40
+GC GC   50.0  0.00
+GN GN   50.0  0.40

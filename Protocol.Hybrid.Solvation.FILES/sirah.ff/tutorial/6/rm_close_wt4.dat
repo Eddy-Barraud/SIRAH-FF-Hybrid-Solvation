@@ -1,0 +1,18 @@
+# Example of selection file for Protein-Membrane systems
+# This file was made for the system of Tutorial 6, it may not work out-of-the box
+# in other systems.
+
+# This is the regular selection for Proteins to asure their proper sovation
+
+  WT4_prot  = (resname WT4 and within 0.3 of group Protein);
+
+# This selection accounts for imprefections in the embedding procedure, leading
+# to large empty volumes around the transmembrane region of the protein, which
+# may be fill by WT4 molecules during the generation of the solvation box.
+# The exclusion cut-off need to be set according to each system.
+
+  WT4_lipid = (resname WT4 and within 0.5 of (name "BE*" "BC1*" "BC2*" "BCT*"));
+
+# Output
+  system    = not (same residue as (WT4_prot or WT4_lipid));
+  system;

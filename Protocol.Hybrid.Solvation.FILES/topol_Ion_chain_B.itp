@@ -1,0 +1,33 @@
+;
+;	File 'topol_Ion_chain_B.itp' was generated
+;	By user: ebarraud (82322)
+;	On host: hyades
+;	At date: Thu May 20 16:15:38 2021
+;
+;	This is a include topology file
+;
+;	Created by:
+;	                :-) GROMACS - gmx pdb2gmx, 2020-UNCHECKED (-:
+;	
+;	Executable:   /opt/cecisw/arch/easybuild/2019b/software/GROMACS/2020-foss-2019b/bin/gmx
+;	Data prefix:  /opt/cecisw/arch/easybuild/2019b/software/GROMACS/2020-foss-2019b
+;	Working dir:  /home/ebarraud/hPSP-pser-3
+;	Command line:
+;	  gmx pdb2gmx -f 6hyj-chainA.pdb -o hPSP.gro
+;	Force field was read from the standard GROMACS share directory.
+;
+
+[ moleculetype ]
+; Name            nrexcl
+Ion_chain_B         3
+
+[ atoms ]
+;   nr       type  resnr residue  atom   cgnr     charge       mass  typeB    chargeB      massB
+; residue 302 CA  rtp CA   q +2.0
+     1         C0    302     CA     CA      1          2      40.08   ; qtot 2
+
+; Include Position restraint file
+#ifdef POSRES
+#include "posre_Ion_chain_B.itp"
+#endif
+

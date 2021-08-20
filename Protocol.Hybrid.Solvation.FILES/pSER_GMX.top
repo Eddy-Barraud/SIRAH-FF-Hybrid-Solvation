@@ -1,0 +1,15 @@
+; pSER_GMX.top created by acpype (v: 2020-11-11T22:59:34CET) on Mon May 17 12:21:17 2021
+
+[ defaults ]
+; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ
+1               2               yes             0.5     0.8333
+
+; Include pSER_GMX.itp topology
+#include "pSER_GMX.itp"
+
+[ system ]
+ pSER
+
+[ molecules ]
+; Compound        nmols
+ pSER             1     
