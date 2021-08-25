@@ -19,7 +19,7 @@ Ionic strength is better represented by including **FG ions to the FG shell** in
 ## **0. Retrieve the starting files**
 Download the archive with all the necessary stuff and extract it : 
 
-`curl -L "https://github.com/eddydu44/SIRAH-FF-Hybrid-Solvation/raw/main/Protocol.Hybrid.Solvation.FILES.tar.gz" | tar xz `
+`curl -L "https://github.com/Eddy-Barraud/SIRAH-FF-Hybrid-Solvation/raw/main/Protocol.Hybrid.Solvation.FILES.tar.gz" | tar xz `
 
 You will get a folder containing the force field definition of SIRAH inside the sirah.ff folder (version 2.2_20-07), the necessary MDP files to perform the simulation, the topology files, and the protein already in the GROMACS format. The protein was prepared using the command pdb2gmx over the protein structure of chain A, retrieved from rscb.org with the PDB code 6HYJ, without the ligand. Then, the ligand was added using ACPYPE server and the GAFF2 Force Field. 
 
